@@ -20,6 +20,7 @@ class Loader:
             data = safe_load(f)
 
         self.cache[guild] = data
+        return data
 
     def reload(self, guild: int) -> dict:
         self.flush(guild)
