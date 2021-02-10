@@ -1,5 +1,7 @@
+from asyncio import get_event_loop, sleep
 from discord import Member, Guild, TextChannel, Message, Embed
 from discord.ext import commands
+from discord.utils import get
 
 action_values = {
     "null": 0,
@@ -7,10 +9,24 @@ action_values = {
     "delete": 2,
 }
 
+embed_template = """[**Jump to Message**]({jump}) - {author} ({author.id})
+
+**__Snippet:__**
+```
+{snippet}
+```
+
+**__Detection Values:__**
+{vals}
+
+**__Actions Taken:__**
+"""
+
 
 class Detectors(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.loop = get_event_loop()
 
     def should_ignore(self, guild: Guild, member: Member, channel: TextChannel):
         try:
@@ -44,22 +60,67 @@ class Detectors(commands.Cog):
 
         return False
 
-    async def logsend(self, channel: TextChannel, embed: Embed):
-        if channel:
-            await channel.send(embed=embed)
+    def toxicity_embed(self, message: Message, scores: dict, ops: list) -> Embed:
+        title = f"ToxWarn | {message.guild} -> #{message.channel}"
 
-    async def execute_toxic_op(self, message: Message, op: dict, scores: dict):
-        if op["action"] == "alert":
-            print("Alert:", message.author.id)
+        jump = str(message.jump_url)
+        snippet = message.content[:1024]
+        vals = "\n".join([f"{k}: {round(v, 3)}" for k, v in scores.items()])
 
-        elif op["action"] == "delete":
-            print("Delete:", message.channel.id, message.id)
+        desc = embed_template.format(jump=jump, snippet=snippet, author=message.author, vals=vals)
+        embed = Embed(title=title, colour=0xFF0000, description=desc)
 
-        elif op["action"] == "dm":
-            print("DM:", message.author.id, "Content:", op["message"])
+        for op in ops:
+            action = op["action"]
+            extra = "No Extra Data"
+            if op:
+                for k, v in op.items():
+                    if k != "action":
+                        extra = f"{k}: {v}"
+                        break
+            embed.add_field(name=action, value=extra)
 
-        elif op["action"] == "mute":
-            print("Mute:", message.author.id, "Duration:", op["duration"])
+        return embed
+
+    async def mute_user(self, role: int, member: Member, duration: int):
+        if not role: return
+        await member.add_roles(get(member.guild.roles, id=role))
+        await sleep(duration)
+        await member.remove_roles(get(member.guild.roles, id=role))
+
+    async def logsend(self, guild: Guild, logtype: str, embed: Embed = None, content: str = None):
+        config = self.bot.cfg.load(guild.id).get("logs", {})
+
+        if not config:
+            return
+
+        channel = guild.get_channel(config.get(logtype))
+
+        if not channel:
+            return
+
+        await channel.send(content=content, embed=embed)
+
+    async def execute_toxic_op(self, message: Message, op: dict, scores: dict, ops: list, mute_role: int):
+        try:
+            if op["action"] == "alert":
+                await self.logsend(message.guild, "toxic", embed=self.toxicity_embed(message, scores, ops))
+
+            elif op["action"] == "delete":
+                await message.delete()
+
+            elif op["action"] == "dm":
+                content = op["message"]
+
+                for k, v in scores.items():
+                    if k in content:
+                        content = content.format(value=round(v, 3))
+                await message.author.send(content)
+
+            elif op["action"] == "mute":
+                await self.mute_user(mute_role, message.author, op["duration"])
+        except Exception as e:
+            print(f"Failed to execute action {op['action']}: {e}")
 
     async def execute_toxic(self, message: Message, scores: dict):
         config = self.bot.cfg.load(message.guild.id)
@@ -67,7 +128,6 @@ class Detectors(commands.Cog):
         if not config:
             return
 
-        logging = config["logs"]
         values = config["config"]["toxic"]
 
         top_action = {"name":"null"}
@@ -96,11 +156,8 @@ class Detectors(commands.Cog):
         name = top_action["name"]
         ops = top_action["run"]
 
-        print("Message:", message.content)
-        print("Actions to take:")
-
         for op in ops:
-            await self.execute_toxic_op(message, op, scores)
+            self.loop.create_task(self.execute_toxic_op(message, op, scores, ops, config.get("muted_role")))
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
