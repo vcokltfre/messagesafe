@@ -1,0 +1,110 @@
+logs:
+  toxic: 728343273562701984
+  nsfw: 728343273562701984
+
+exempt:
+  users: []
+  channels: []
+  roles: []
+  categories: []
+
+config:
+  toxic:
+    toxic:
+      - value: 0.9
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.95
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 3600
+            - action: dm
+              message: "You have been muted for an hour for triggering toxicity detection filters. [toxicity: {value}]"
+    severe_toxic:
+      - value: 0.6
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.65
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 7200
+            - action: dm
+              message: "You have been muted for two hours for triggering toxicity detection filters. [severe_toxicity: {value}]"
+    obscene:
+      - value: 0.99
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.999
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 3600
+            - action: dm
+              message: "You have been muted for an hour for triggering toxicity detection filters. [obscene: {value}]"
+    insult:
+      - value: 0.99
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.999
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 3600
+            - action: dm
+              message: "You have been muted for an hour for triggering toxicity detection filters. [insult: {value}]"
+    threat:
+      - value: 0.99
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.999
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 3600
+            - action: dm
+              message: "You have been muted for an hour for triggering toxicity detection filters. [threat: {value}]"
+    identity_hate:
+      - value: 0.8
+        action:
+          name: alert
+          run:
+            - action: alert
+      - value: 0.85
+        action:
+          name: delete
+          run:
+            - action: alert
+            - action: delete
+            - action: mute
+              duration: 3600
+            - action: dm
+              message: "You have been muted for an hour for triggering toxicity detection filters. [identity_hate: {value}]"
+
+muted_role: 734720445454221313
