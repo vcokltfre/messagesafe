@@ -11,12 +11,12 @@ exempt:
 config:
   toxic:
     toxic:
-      - value: 0.9
+      - value: 0.99
         action:
           name: alert
           run:
             - action: alert
-      - value: 0.95
+      - value: 0.998
         action:
           name: delete
           run:
@@ -48,7 +48,7 @@ config:
           name: alert
           run:
             - action: alert
-      - value: 0.999
+      - value: 0.998
         action:
           name: delete
           run:
@@ -64,7 +64,7 @@ config:
           name: alert
           run:
             - action: alert
-      - value: 0.999
+      - value: 0.998
         action:
           name: delete
           run:
@@ -75,12 +75,12 @@ config:
             - action: dm
               message: "You have been muted for an hour for triggering toxicity detection filters. [insult: {value}]"
     threat:
-      - value: 0.99
+      - value: 0.95
         action:
           name: alert
           run:
             - action: alert
-      - value: 0.999
+      - value: 0.97
         action:
           name: delete
           run:
