@@ -168,6 +168,12 @@ class Detectors(commands.Cog):
 
         await self.execute_toxic(message, await self.bot.detector.toxic(message.content))
 
+    @commands.command(name="reload_guild")
+    @commands.check_any(commands.has_guild_permissions(manage_guild=True), commands.is_owner())
+    async def reload_guild(self, ctx):
+        self.bot.cfg.reload(ctx.guild.id)
+        await ctx.send(f"Successfully reloaded guild config for {ctx.guild.id}.")
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Detectors(bot))
