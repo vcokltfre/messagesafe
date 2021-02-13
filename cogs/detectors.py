@@ -119,6 +119,9 @@ class Detectors(commands.Cog):
 
             elif op["action"] == "mute":
                 await self.mute_user(mute_role, message.author, op["duration"])
+
+                await self.logsend(message.guild, "toxic_mute", embed=self.toxicity_embed(message, scores, ops))
+
         except Exception as e:
             print(f"Failed to execute action {op['action']}: {e}")
 
