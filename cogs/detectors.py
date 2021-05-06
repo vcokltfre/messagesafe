@@ -118,7 +118,7 @@ class Detectors(commands.Cog):
                 await message.author.send(content)
 
             elif op["action"] == "mute":
-                await self.mute_user(mute_role, message.author, op["duration"])
+                self.bot.loop.create_task(self.mute_user(mute_role, message.author, op["duration"]))
 
                 await self.logsend(message.guild, "toxic_mute", embed=self.toxicity_embed(message, scores, ops))
 
